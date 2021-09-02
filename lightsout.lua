@@ -74,7 +74,7 @@ function play_note(col,step)
     local freq = MusicUtil.note_num_to_freq(scales[row][col])
     grid_.visual[row][col]=15
     engine.hz(freq)
-    grid_:toggle_key(row,col)
+    -- grid_:toggle_key(row,col)
   end
 end
 
