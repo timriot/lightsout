@@ -85,7 +85,9 @@ function GGrid:get_visual()
   -- illuminate lights out
   for row in ipairs(self.lightsout) do
     for col in ipairs(self.lightsout[row]) do
-      self.visual[row][col]=7*self.lightsout[row][col]
+      if self.visual[row][col]<7 then
+        self.visual[row][col]=7*self.lightsout[row][col]
+      end
     end
   end
 
