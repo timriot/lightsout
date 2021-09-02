@@ -20,13 +20,16 @@ function GGrid:new(args)
   -- setup visual
   m.visual={}
   m.lightsout={}
+  m.playing={}
   m.grid_width=16
   for i=1,8 do
     m.lightsout[i]={}
+    m.playing[i]={}
     m.visual[i]={}
     for j=1,m.grid_width do
       m.visual[i][j]=0
       m.lightsout[i][j]=0
+      m.playing[i][j]=0
     end
   end
 
@@ -60,16 +63,20 @@ function GGrid:key_press(row,col,on)
     self.pressed_buttons[row..","..col]=nil
   end
   if on then
-    for i=row-1,row+1 do
-      for j=col-1,col+1 do
-        if i>=1 and i<=8 and j>=1 and j<=self.grid_width then
-          self.lightsout[i][j]=1-self.lightsout[i][j]
-        end
-      end
-    end
+  	self:toggle_key(row,col)
   end
 end
 
+
+function GGrid:toggle_key(row,col)
+	for i=row-1,row+1 do
+	  for j=col-1,col+1 do
+	    if i>=1 and i<=8 and j>=1 and j<=self.grid_width then
+	      self.lightsout[i][j]=1-self.lightsout[i][j]
+	    end
+	  end
+	end
+end
 
 function GGrid:get_visual()
   -- clear visual
