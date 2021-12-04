@@ -62,24 +62,52 @@ function GGrid:key_press(row,col,on)
   else
     self.pressed_buttons[row..","..col]=nil
   end
+
+  local buttons={}
+  for k,_ in pairs(self.pressed_buttons) do
+    local row,col=k:match("(%d+),(%d+)")
+    buttons[#buttons+1]={tonumber(row),tonumber(col)}
+  end
+
+
   if on then
-  	self:toggle_key(row,col)
+    -- if pressing more than one button
+    if #buttons==2 then
+      if buttons[1][1]==buttons[2][1] then 
+        print("two buttons on a row pressed")
+        self:toggle_tie(buttons[1][1],buttons[1][2],buttons[2][2])
+      end
+    else
+      -- do anything you want with key press
+      -- if row==1 and col==2 then...
+      self:toggle_key(row,col)
+    end
   end
 end
 
+function GGrid:toggle_tie(row,col1,col2)
+  local foo=col1
+  if col1>col2 then 
+    col1=col2 
+    col2=foo
+  end
+  print("toggle_tie",row,col1,col2)
+  -- create a tie (enter "2" for each col between col1 and col2 on row)
+  for col=col1, col2 do
+    self.lightsout[row][col]=col2-col+2
+  end
+end
 
 function GGrid:toggle_key(row,col)
-	for i=row-1,row+1 do
-	  for j=col-1,col+1 do
-	    if i>=1 and i<=8 and j>=1 and j<=self.grid_width then
-	      self.lightsout[i][j]=1-self.lightsout[i][j]
-	    end
-	  end
-	end
+  if self.lightsout[row][col]>0 then
+    self.lightsout[row][col] = 0
+  else
+    self.lightsout[row][col] = 1
+  end
 end
 
 function GGrid:get_visual()
-  -- clear visual
+  -- clear visual (generic)
   for row=1,8 do
     for col=1,self.grid_width do
       self.visual[row][col]=self.visual[row][col]-1
@@ -89,21 +117,36 @@ function GGrid:get_visual()
     end
   end
 
+  -- specific to "lights out"
   -- illuminate lights out
   for row in ipairs(self.lightsout) do
     for col in ipairs(self.lightsout[row]) do
-      if self.visual[row][col]<7 then
-        self.visual[row][col]=7*self.lightsout[row][col]
+      if self.lightsout[row][col]>0 then
+        self.visual[row][col]=self.lightsout[row][col]
       end
     end
   end
 
-  -- illuminate currently pressed button
+  -- highlight columns
+  if self.highlight_column~=nil then 
+    local col=self.highlight_column
+    for row=1,8 do 
+      self.visual[row][col]=self.visual[row][col]+5
+      if self.visual[row][col]>15 then 
+        self.visual[row][col]=15
+      end
+    end
+  end
+
+  -- grid_.highlight_column=1
+
+  -- illuminate currently pressed button (generic)
   for k,_ in pairs(self.pressed_buttons) do
     local row,col=k:match("(%d+),(%d+)")
     self.visual[tonumber(row)][tonumber(col)]=15
   end
 
+  
   return self.visual
 end
 
