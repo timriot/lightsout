@@ -13,11 +13,6 @@ MusicUtil = require("musicutil")
 lattice=require("lattice")
 Sequins = require("sequins")
 
--- https://github.com/schollz/mx.synths#usage-as-library
-engine.name="MxSynths"
-local mxsynths_=include("mx.synths/lib/mx.synths")
-mxsynths=mxsynths_:new()
-
 
 chordscale=Sequins{}
 -- Given the C-scale, generate chords based on each note of the scale
@@ -36,6 +31,10 @@ end
 
 
 function init()
+  -- https://github.com/schollz/mx.synths#usage-as-library
+  local mxsynths_=include("mx.synths/lib/mx.synths")
+  mxsynths=mxsynths_:new()
+  params:set("mxsynths_release",0.1) -- will be easier to hear release
   make_chords()
   grid_=grid__:new()
 
@@ -143,7 +142,7 @@ function play_note(col)
       print("note_off",notes_current[row])
       notes_current[row]=nil
     end
-    if note_flag>0 or (notes_row_last[row]~=nil and note_flag>=notes_row_last[row] and note_flag>0) then 
+    if note_flag>0 and do_release then 
       local note=scales[row][col]
       print("note_on",note_flag,note)
       engine.mx_note_on(note,0.5,10)

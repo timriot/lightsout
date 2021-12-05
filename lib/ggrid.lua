@@ -93,8 +93,12 @@ function GGrid:toggle_tie(row,col1,col2)
   end
   print("toggle_tie",row,col1,col2)
   -- create a tie (enter "2" for each col between col1 and col2 on row)
+  -- start at 15 and go down
   for col=col1, col2 do
-    self.lightsout[row][col]=col2-col+2
+    self.lightsout[row][col]=15-(col-col1)*2
+    if self.lightsout[row][col]<2 then 
+       self.lightsout[row][col]=2 -- must be greater than 2 to be tie
+    end
   end
 end
 
@@ -123,6 +127,10 @@ function GGrid:get_visual()
     for col in ipairs(self.lightsout[row]) do
       if self.lightsout[row][col]>0 then
         self.visual[row][col]=self.lightsout[row][col]
+        -- make the note_flag "1" brighter
+        if self.visual[row][col]==1 then 
+          self.visual[row][col]=15
+        end
       end
     end
   end
