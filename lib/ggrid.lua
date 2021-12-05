@@ -103,6 +103,7 @@ function GGrid:toggle_tie(row,col1,col2)
 end
 
 function GGrid:toggle_key(row,col)
+  print("row:",row,"col:",col,"note:",scales[row][col])
   if self.lightsout[row][col]>0 then
     self.lightsout[row][col] = 0
   else

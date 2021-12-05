@@ -12,19 +12,17 @@ grid__=include("lightsout/lib/ggrid")
 MusicUtil = require("musicutil")
 lattice=require("lattice")
 Sequins = require("sequins")
+engine.name="MxSynths"
 
 
 chordscale=Sequins{}
--- Given the C-scale, generate chords based on each note of the scale
--- musicutil.generate_scale_of_length (root_num, scale_type, length)
--- musicutil.generate_chord (root_num, chord_type[, inversion])
--- populate a sequin 
-function make_chords()
-  local root_num = 48
-  local scale_type = "major"
-  local length = 8
+
+function make_chords(root_num, scale_type, length)
+  local root_num = root_num or 48
+  local scale_type = scale_type or "major"
+  local length = length or 8
   local scale = MusicUtil.generate_scale_of_length (root_num, scale_type, length)
-  tab.print(scale)
+  table.reverse(scale) -- Reverse it to get it into the proper orientation for the grid
   chordscale:settable(scale)
 end
 
@@ -44,16 +42,12 @@ function init()
   redrawer.event=redraw
   redrawer:start()
 
-  scale_full=MusicUtil.generate_scale_of_length(12, 1, 64)
-  for _, note in ipairs(MusicUtil.generate_scale_of_length(12, 1, 128)) do
-    table.insert(scale_full,note)
-  end
-  -- shuffled = {}
-  -- for i, v in ipairs(scale_full) do
-  --   local pos = math.random(1, #shuffled+1)
-  --   table.insert(shuffled, pos, v)
+  -- scale_full=MusicUtil.generate_scale_of_length(12, 1, 64)
+  -- for _, note in ipairs(MusicUtil.generate_scale_of_length(12, 1, 128)) do
+  --   table.insert(scale_full,note)
   -- end
-  -- scale_full=shuffled
+  
+  
   scales={}
   k=1
   for col=1,16 do
@@ -61,7 +55,8 @@ function init()
       if col==1 then
         scales[row]={}
       end
-      scales[row][col]=scale_full[k]
+      -- scales[row][col]=scale_full[k]
+      scales[row][col]=chordscale[row]
       k=k+1
     end
     k = k - 3
@@ -95,7 +90,7 @@ function init()
             print(MusicUtil.note_num_to_name(note))
           end 
           local freq = MusicUtil.note_num_to_freq(note)
-          --engine.hz(freq)
+          -- engine.mx_note_on(note,0.5,5)
           print(note)
       end
       end,
@@ -104,14 +99,13 @@ function init()
   end
   sequencer:hard_restart()
 
-  --  sudo systemctl restart norns-jack.service; sudo systemctl restart norns-matron.service; sudo systemctl restart norns-crone.service; ~/norns/build/maiden-repl/maiden-repl
+  clock.run(function() -- re-enabled this to have the kolor UI draw
+    while true do
+      clock.sleep(1/10)
+      redraw()
+    end
+  end)
 
-  -- clock.run(function()
-  --   while true do
-  --     clock.sleep(1/10)
-  --     redraw()
-  --   end
-  -- end)
 end
 
 notes_current={}
@@ -151,18 +145,6 @@ function play_note(col)
     notes_row_last[row]=note_flag 
   end
 
-
-
-  -- local row=(step-1)%8+1
-  -- local light=grid_.lightsout[row][col]
-  -- if light>0 then
-  --   print(row,col)
-  --   print(scales[row][col])
-  --   local freq = MusicUtil.note_num_to_freq(scales[row][col])
-  --   grid_.visual[row][col]=15
-  --   engine.hz(freq)
-  --   -- grid_:toggle_key(row,col)
-  -- end
 end
 
 function enc(k,d)
@@ -175,11 +157,6 @@ end
 
 function redraw()
   screen.clear()
-  -- local visual=grid_.visual
-  -- screen.level(0)
-  -- screen.rect(1,1,128,64)
-  -- screen.fill()
-
   -- https://github.com/schollz/kolor/blob/main/kolor.lua
   if grid_==nil then 
     do return end 
@@ -196,21 +173,6 @@ function redraw()
       end
     end
   end
-  -- screen.level(15)
-  -- screen.rect(position[2]*8-7,position[1]*8-8+1,7,7)
-  -- screen.stroke()
-
-  -- for row=1,8 do
-  --   for col=1,16 do 
-  --     if visual[row][col]>0 then 
-  --       screen.level(visual[row][col])
-  --       screen.pixel(col*2,row*2)
-  --       screen.fill()
-  --     end
-  --   end
-  -- end
-  -- screen.move(32,64)
-  -- screen.text("lightsout")
   screen.update()
 end
 
