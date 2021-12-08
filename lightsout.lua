@@ -14,18 +14,12 @@ lattice=require("lattice")
 Sequins = require("sequins")
 engine.name="MxSynths"
 
-
+grid_layout = {}
+scales={}
+scales2={}
 chordscale=Sequins{}
-
-function make_chords(root_num, scale_type, length)
-  local root_num = root_num or 48
-  local scale_type = scale_type or "major"
-  local length = length or 8
-  local scale = MusicUtil.generate_scale_of_length (root_num, scale_type, length)
-  table.reverse(scale) -- Reverse it to get it into the proper orientation for the grid
-  chordscale:settable(scale)
-end
-
+notes_current={}
+notes_row_last={}
 
 
 function init()
@@ -34,6 +28,9 @@ function init()
   mxsynths=mxsynths_:new()
   params:set("mxsynths_release",0.1) -- will be easier to hear release
   make_chords()
+  generate_melody_grid_based_on_chords()
+  -- make_grid_layout()
+  make_grid_layout_alt()
   grid_=grid__:new()
 
   local redrawer=metro.init()
@@ -46,21 +43,6 @@ function init()
   -- for _, note in ipairs(MusicUtil.generate_scale_of_length(12, 1, 128)) do
   --   table.insert(scale_full,note)
   -- end
-  
-  
-  scales={}
-  k=1
-  for col=1,16 do
-    for row=1,8 do 
-      if col==1 then
-        scales[row]={}
-      end
-      -- scales[row][col]=scale_full[k]
-      scales[row][col]=chordscale[row]
-      k=k+1
-    end
-    k = k - 3
-  end
 
   -- start lattice
   local sequencer=lattice:new{
@@ -90,7 +72,7 @@ function init()
             print(MusicUtil.note_num_to_name(note))
           end 
           local freq = MusicUtil.note_num_to_freq(note)
-          -- engine.mx_note_on(note,0.5,5)
+          -- engine.mx_note_on(note,0.5,2)
           print(note)
       end
       end,
@@ -99,7 +81,7 @@ function init()
   end
   sequencer:hard_restart()
 
-  clock.run(function() -- re-enabled this to have the kolor UI draw
+  clock.run(function() -- re-enable this to have the kolor UI draw properly
     while true do
       clock.sleep(1/10)
       redraw()
@@ -108,8 +90,91 @@ function init()
 
 end
 
-notes_current={}
-notes_row_last={}
+function make_chords(root_num, scale_type, length)
+  local root_num = root_num or 48
+  local scale_type = scale_type or "major"
+  local length = length or 8
+  local scale = MusicUtil.generate_scale_of_length (root_num, scale_type, length)
+  table.reverse(scale) -- Reverse it to get it into the proper orientation for the grid
+  chordscale:settable(scale)
+end
+
+function make_grid_layout_alt()
+  k=1
+  for col=1,16 do
+      for row=1,8 do 
+      if col==1 then
+          scales[row]={}
+      end
+      scales[row][col]=grid_layout[col][row]
+      k=k+1
+      end
+      k = k - 3
+  end
+end
+
+function generate_melody_grid_based_on_chords()
+  local root_num = 48+12 -- add an octave because this is a melody
+  local scale_type = "Major"
+  local scale = MusicUtil.generate_scale(root_num, scale_type)
+  local scale_len = tab.count(scale)
+  print("scale length: "..scale_len)
+  for _, note in ipairs(scale) do
+      for beat=1,4 do -- make the same column 4 times in grid_layout
+          local grid_notes = {}
+          -- local chord_types = MusicUtil.chord_types_for_note(note,root_num,scale_type)
+          -- local lookup_chord_by_name = tab.invert(chord_types)
+          -- local chord = MusicUtil.generate_chord(note,scale_type)
+          local note_name = MusicUtil.note_num_to_name(note)
+          local chord_by_degree = {}
+          for i=1,7 do -- gimme 8 notes for a grid column
+              table.insert(chord_by_degree,MusicUtil.generate_chord_scale_degree(note,scale_type,i))
+          end
+          -- print("note ".._..": "..note_name.."("..note..")".." grid col: ")
+          local chord_to_play = chord_by_degree[1]
+          -- tab.print(chord_to_play)
+          local chord_intervals = {1,3,5,7,4,6}
+          for _,index in ipairs(chord_intervals) do
+              for k=1,3 do
+                  local note = chord_by_degree[index][k]
+                  if tab.contains(grid_notes,note)==false and tab.count(grid_notes)<8 then 
+                      table.insert(grid_notes,chord_by_degree[index][k])
+                      -- print("inserted:"..chord_by_degree[index][k])
+                  end
+              end
+          end
+          table.reverse(grid_notes)
+          -- tab.print(grid_notes)
+          table.insert(grid_layout, grid_notes)
+      end
+      
+  end
+  tab.print(grid_layout)
+end
+
+function make_grid_layout()
+  k=1
+  for col=1,16 do
+    for row=1,8 do 
+      if col==1 then
+        scales[row]={}
+      end
+      -- scales[row][col]=scale_full[k]
+      scales[row][col]=chordscale[row]
+      k=k+1
+    end
+    k = k - 3
+  end
+  tab.print(scales)
+ end
+
+function print_grid_layout(layout)
+  local l = layout or grid_layout
+  for _,col in ipairs(l) do
+    -- print("row:"..row)
+    tab.print(col)
+  end
+end
 
 function trigger_note(note,row)
   notes_current[row]=note 
